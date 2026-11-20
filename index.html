@@ -55,6 +55,8 @@ a.go{color:var(--accent);font-weight:600;text-decoration:none;margin-left:auto}
 .msg.info{background:var(--card);color:var(--muted);border:1px solid var(--line)}
 .foot{color:var(--muted);font-size:.78rem;margin-top:18px}
 .foot a{color:inherit}
+.panel.slim{padding:6px}
+.hint{color:var(--muted);font-size:.85rem;margin:0 2px 8px}
 .hidden{display:none!important}
 .spin{display:inline-block;width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:s .7s linear infinite;vertical-align:-2px;margin-right:6px}
 @keyframes s{to{transform:rotate(360deg)}}
@@ -62,10 +64,7 @@ a.go{color:var(--accent);font-weight:600;text-decoration:none;margin-left:auto}
 </head>
 <body>
 <div class="wrap">
-  <h1>⛽ Essence près de moi</h1>
-  <p class="sub">Prix à la pompe au Québec, selon ta position. Données : Régie de l’énergie (Régie essence Québec).</p>
-
-  <div class="panel">
+  <div class="panel hidden" id="locPanel">
     <div class="row">
       <button class="btn" id="locBtn" type="button">📍 Me localiser</button>
       <form class="row" id="searchForm" style="flex:1;flex-wrap:nowrap" role="search">
@@ -76,7 +75,7 @@ a.go{color:var(--accent);font-weight:600;text-decoration:none;margin-left:auto}
     <div class="where" id="where">Position non définie.</div>
   </div>
 
-  <div class="panel">
+  <div class="panel slim">
     <div class="row">
       <div class="seg" role="group" aria-label="Type de carburant" id="fuelSeg">
         <button type="button" data-fuel="regulier" aria-pressed="true">Ordinaire</button>
@@ -84,7 +83,7 @@ a.go{color:var(--accent);font-weight:600;text-decoration:none;margin-left:auto}
         <button type="button" data-fuel="diesel" aria-pressed="false">Diesel</button>
       </div>
     </div>
-    <div class="row" style="margin-top:8px">
+    <div class="row hidden" style="margin-top:8px">
       <label for="radius" style="color:var(--muted);font-size:.9rem">Rayon</label>
       <select id="radius">
         <option value="1">1 km</option><option value="2">2 km</option>
@@ -105,10 +104,12 @@ a.go{color:var(--accent);font-weight:600;text-decoration:none;margin-left:auto}
     <div class="row" style="margin-top:8px"><input type="file" id="file" accept=".gz,.json,.geojson,application/gzip,application/json"></div>
   </div>
 
+  <div id="hint" class="hint hidden"></div>
   <div id="stats" class="stats hidden"></div>
   <ul id="list" class="list"></ul>
   <div class="row" style="justify-content:center;margin-top:10px"><button class="btn ghost hidden" id="more" type="button">Voir plus</button></div>
 
+  <p class="foot"><button class="btn ghost" id="chg" type="button" style="min-height:36px;padding:6px 12px;font-size:.85rem">📍 Changer de position</button></p>
   <p class="foot" id="foot">
     Les prix sont déclarés par les stations et peuvent différer de ceux à la pompe. Mis à jour environ aux 5 minutes par la Régie.
   </p>
@@ -219,16 +220,17 @@ function setPos(lat,lon,label){
   state.pos={lat:lat,lon:lon}; state.posLabel=label||"";
   store(POS_KEY,{lat:lat,lon:lon,label:label||""});
   $("where").textContent="📍 "+(label||("Lat "+lat.toFixed(3)+", Lon "+lon.toFixed(3)));
+  $("locPanel").classList.add("hidden");
   state.shown=PAGE; render();
 }
 function locate(){
   var btn=$("locBtn");
-  if(!navigator.geolocation){ $("where").textContent="Géolocalisation indisponible : entre une ville ou un code postal."; return; }
+  if(!navigator.geolocation){ $("locPanel").classList.remove("hidden"); $("where").textContent="Géolocalisation indisponible : entre une ville ou un code postal."; return; }
   btn.disabled=true; $("where").textContent="Recherche de ta position…";
   navigator.geolocation.getCurrentPosition(function(p){
     btn.disabled=false; setPos(p.coords.latitude,p.coords.longitude,"Ma position");
   },function(err){
-    btn.disabled=false;
+    btn.disabled=false; $("locPanel").classList.remove("hidden");
     $("where").textContent=(err&&err.code===1)
       ?"Accès à la position refusé : entre une ville ou un code postal."
       :"Position introuvable : entre une ville ou un code postal.";
@@ -251,6 +253,7 @@ $("searchForm").addEventListener("submit",async function(e){
   }catch(err){ $("where").textContent="Recherche impossible pour le moment. Essaie « Me localiser »."; }
 });
 $("locBtn").addEventListener("click",locate);
+$("chg").addEventListener("click",function(){ $("locPanel").classList.toggle("hidden"); });
 
 /* ---------- Affichage ---------- */
 function dist(a,b,c,d){
@@ -269,21 +272,26 @@ function el(tag,cls,text){var e=document.createElement(tag); if(cls)e.className=
 
 function render(){
   var list=$("list"), stats=$("stats"), more=$("more");
-  list.textContent=""; more.classList.add("hidden"); stats.classList.add("hidden");
+  list.textContent=""; more.classList.add("hidden"); stats.classList.add("hidden"); $("hint").classList.add("hidden");
   updateFoot();
   if(!state.stations.length) return;
-  if(!state.pos){ setStatus("loading-none","Clique sur « Me localiser » ou entre une ville pour voir les stations proches."); $("status").className="msg info"; return; }
+  if(!state.pos){ $("locPanel").classList.remove("hidden"); setStatus("loading-none","Clique sur « Me localiser » ou entre une ville pour voir les stations proches."); $("status").className="msg info"; return; }
   setStatus(null);
   var radius=+$("radius").value, sort=$("sort").value, fuel=state.fuel, pos=state.pos;
-  var res=[];
+  var all=[];
   for(var i=0;i<state.stations.length;i++){
     var s=state.stations[i], price=s.p[fuel]; if(price==null) continue;
-    var d=dist(pos.lat,pos.lon,s.lat,s.lon);
-    if(d<=radius) res.push({s:s,price:price,d:d});
+    all.push({s:s,price:price,d:dist(pos.lat,pos.lon,s.lat,s.lon)});
   }
-  if(!res.length){
-    setStatus("warn","Aucune station avec ce carburant dans "+radius+" km. Augmente le rayon."); return;
+  var res=[], radii=[radius,10,25,50,100].filter(function(x){return x>=radius});
+  for(var k=0;k<radii.length;k++){
+    radius=radii[k];
+    res=all.filter(function(r){return r.d<=radius});
+    if(res.length) break;
   }
+  if(!res.length){ setStatus("warn","Aucune station avec ce carburant trouvée près de toi."); return; }
+  var hint=$("hint"); hint.classList.remove("hidden");
+  hint.textContent="Les moins chères dans un rayon de "+radius+" km · "+res.length+" stations · moyenne "+fmt(res.reduce(function(a,r){return a+r.price},0)/res.length)+" ¢";
   var min=Infinity,sum=0;
   res.forEach(function(r){ if(r.price<min)min=r.price; sum+=r.price; });
   var avg=sum/res.length;
@@ -293,7 +301,6 @@ function render(){
   [[fmt(min)+" ¢","Le plus bas"],[fmt(avg)+" ¢","Moyenne"],[String(res.length),"Stations"]].forEach(function(x){
     var d=el("div","stat"); d.appendChild(el("b",null,x[0])); d.appendChild(el("span",null,x[1])); stats.appendChild(d);
   });
-  stats.classList.remove("hidden");
 
   var frag=document.createDocumentFragment();
   res.slice(0,state.shown).forEach(function(r,i){
