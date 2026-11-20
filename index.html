@@ -75,26 +75,7 @@ a.go{color:var(--accent);font-weight:600;text-decoration:none;margin-left:auto}
     <div class="where" id="where">Position non définie.</div>
   </div>
 
-  <div class="panel slim">
-    <div class="row">
-      <div class="seg" role="group" aria-label="Type de carburant" id="fuelSeg">
-        <button type="button" data-fuel="regulier" aria-pressed="true">Ordinaire</button>
-        <button type="button" data-fuel="super" aria-pressed="false">Super</button>
-        <button type="button" data-fuel="diesel" aria-pressed="false">Diesel</button>
-      </div>
-    </div>
-    <div class="row hidden" style="margin-top:8px">
-      <label for="radius" style="color:var(--muted);font-size:.9rem">Rayon</label>
-      <select id="radius">
-        <option value="1">1 km</option><option value="2">2 km</option>
-        <option value="3">3 km</option><option value="5" selected>5 km</option>
-        <option value="10">10 km</option><option value="15">15 km</option>
-        <option value="25">25 km</option><option value="50">50 km</option>
-      </select>
-      <label for="sort" style="color:var(--muted);font-size:.9rem;margin-left:6px">Trier par</label>
-      <select id="sort"><option value="price" selected>Prix</option><option value="dist">Distance</option></select>
-    </div>
-  </div>
+  <div class="hidden"><select id="radius"><option value="5" selected>5 km</option></select><select id="sort"><option value="price" selected>Prix</option></select></div>
 
   <div id="status" class="msg info"><span class="spin"></span>Chargement des prix…</div>
   <div id="manual" class="msg hidden">
@@ -340,7 +321,7 @@ function updateFoot(){
 }
 
 /* ---------- Événements ---------- */
-$("fuelSeg").addEventListener("click",function(e){
+if($("fuelSeg"))$("fuelSeg").addEventListener("click",function(e){
   var b=e.target.closest("button[data-fuel]"); if(!b) return;
   state.fuel=b.getAttribute("data-fuel");
   Array.prototype.forEach.call($("fuelSeg").children,function(x){x.setAttribute("aria-pressed",x===b?"true":"false")});
