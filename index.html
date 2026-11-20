@@ -313,10 +313,13 @@ function render(){
     meta.appendChild(el("span",null,fmtKm(r.d)));
     if(isBest) meta.appendChild(el("span","badge","Le moins cher"));
     else meta.appendChild(el("span","delta","+"+fmt(r.price-min)+" ¢"));
-    var a=el("a","go","Itinéraire ›");
-    a.href="https://www.google.com/maps/dir/?api=1&destination="+r.s.lat+","+r.s.lon;
-    a.target="_blank"; a.rel="noopener";
+    var a=el("a","go","Apple Plans ›");
+    var url="https://maps.apple.com/?daddr="+r.s.lat+","+r.s.lon+"&dirflg=d";
+    a.href=url; a.target="_blank"; a.rel="noopener";
     meta.appendChild(a); li.appendChild(meta);
+    li.style.cursor="pointer"; li.setAttribute("role","link"); li.tabIndex=0;
+    li.addEventListener("click",function(e){ if(e.target.closest("a")) return; window.location.href=url; });
+    li.addEventListener("keydown",function(e){ if(e.key==="Enter") window.location.href=url; });
     frag.appendChild(li);
   });
   list.appendChild(frag);
