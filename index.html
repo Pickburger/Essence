@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="fr-CA">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Essence près de moi – Québec</title>
+<meta name="theme-color" content="#0f766e">
+<style>
+:root{
+  --bg:#f5f7f6;--card:#fff;--ink:#14201d;--muted:#5d6b67;--line:#e1e7e4;
+  --accent:#0f766e;--accent-ink:#fff;--best:#15803d;--best-bg:#e7f6ec;--warn:#b45309;--warn-bg:#fdf3e3;
+  --shadow:0 1px 2px rgba(0,0,0,.05),0 4px 14px rgba(0,0,0,.04);
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#0e1514;--card:#16201e;--ink:#e8efed;--muted:#93a39e;--line:#26332f;
+  --accent:#2dd4bf;--accent-ink:#06201c;--best:#4ade80;--best-bg:#12301f;--warn:#fbbf24;--warn-bg:#2f2610;--shadow:none}
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.wrap{max-width:680px;margin:0 auto;padding:16px 14px 40px}
+h1{font-size:1.35rem;margin:6px 0 2px;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:.9rem;margin:0 0 14px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;box-shadow:var(--shadow);margin-bottom:12px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button,select,input{font:inherit;color:inherit}
+.btn{background:var(--accent);color:var(--accent-ink);border:0;border-radius:10px;padding:10px 14px;font-weight:600;cursor:pointer;min-height:44px}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn:disabled{opacity:.6;cursor:default}
+input[type=search],select{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:44px}
+input[type=search]{flex:1;min-width:150px}
+.seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;flex:1}
+.seg button{flex:1;background:transparent;border:0;padding:10px 6px;min-height:44px;cursor:pointer;font-weight:600;color:var(--muted)}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--accent-ink)}
+.where{font-size:.9rem;color:var(--muted);margin-top:8px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.stat b{display:block;font-size:1.2rem;font-variant-numeric:tabular-nums}
+.stat span{font-size:.75rem;color:var(--muted)}
+.list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.item{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;display:grid;grid-template-columns:auto 1fr auto;gap:4px 12px;align-items:center;box-shadow:var(--shadow)}
+.item.best{border-color:var(--best)}
+.rank{width:28px;height:28px;border-radius:50%;background:var(--bg);display:grid;place-items:center;font-size:.8rem;color:var(--muted);font-weight:700}
+.item.best .rank{background:var(--best-bg);color:var(--best)}
+.name{font-weight:650}
+.addr{color:var(--muted);font-size:.88rem}
+.meta{grid-column:2/4;display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:.85rem;color:var(--muted)}
+.price{font-size:1.35rem;font-weight:750;font-variant-numeric:tabular-nums;text-align:right;line-height:1.1}
+.price small{display:block;font-size:.7rem;font-weight:500;color:var(--muted)}
+.badge{background:var(--best-bg);color:var(--best);border-radius:999px;padding:1px 8px;font-size:.75rem;font-weight:700}
+.delta{color:var(--warn)}
+a.go{color:var(--accent);font-weight:600;text-decoration:none;margin-left:auto}
+.msg{padding:14px;border-radius:12px;background:var(--warn-bg);color:var(--warn);font-size:.92rem;margin-bottom:12px}
+.msg.info{background:var(--card);color:var(--muted);border:1px solid var(--line)}
+.foot{color:var(--muted);font-size:.78rem;margin-top:18px}
+.foot a{color:inherit}
+.hidden{display:none!important}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:s .7s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes s{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>⛽ Essence près de moi</h1>
+  <p class="sub">Prix à la pompe au Québec, selon ta position. Données : Régie de l’énergie (Régie essence Québec).</p>
+
+  <div class="panel">
+    <div class="row">
+      <button class="btn" id="locBtn" type="button">📍 Me localiser</button>
+      <form class="row" id="searchForm" style="flex:1;flex-wrap:nowrap" role="search">
+        <input type="search" id="q" placeholder="Ville, adresse ou code postal" autocomplete="off" aria-label="Ville, adresse ou code postal">
+        <button class="btn ghost" type="submit">Chercher</button>
+      </form>
+    </div>
+    <div class="where" id="where">Position non définie.</div>
+  </div>
+
+  <div class="panel">
+    <div class="row">
+      <div class="seg" role="group" aria-label="Type de carburant" id="fuelSeg">
+        <button type="button" data-fuel="regulier" aria-pressed="true">Ordinaire</button>
+        <button type="button" data-fuel="super" aria-pressed="false">Super</button>
+        <button type="button" data-fuel="diesel" aria-pressed="false">Diesel</button>
+      </div>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <label for="radius" style="color:var(--muted);font-size:.9rem">Rayon</label>
+      <select id="radius">
+        <option value="1">1 km</option><option value="2">2 km</option>
+        <option value="3">3 km</option><option value="5" selected>5 km</option>
+        <option value="10">10 km</option><option value="15">15 km</option>
+        <option value="25">25 km</option><option value="50">50 km</option>
+      </select>
+      <label for="sort" style="color:var(--muted);font-size:.9rem;margin-left:6px">Trier par</label>
+      <select id="sort"><option value="price" selected>Prix</option><option value="dist">Distance</option></select>
+    </div>
+  </div>
+
+  <div id="status" class="msg info"><span class="spin"></span>Chargement des prix…</div>
+  <div id="manual" class="msg hidden">
+    Impossible de joindre les données automatiquement (le site de la Régie bloque peut-être l’accès depuis cette page).
+    Télécharge <a href="https://regieessencequebec.ca/stations.geojson.gz" target="_blank" rel="noopener">stations.geojson.gz</a>
+    puis charge-le ici :
+    <div class="row" style="margin-top:8px"><input type="file" id="file" accept=".gz,.json,.geojson,application/gzip,application/json"></div>
+  </div>
+
+  <div id="stats" class="stats hidden"></div>
+  <ul id="list" class="list"></ul>
+  <div class="row" style="justify-content:center;margin-top:10px"><button class="btn ghost hidden" id="more" type="button">Voir plus</button></div>
+
+  <p class="foot" id="foot">
+    Les prix sont déclarés par les stations et peuvent différer de ceux à la pompe. Mis à jour environ aux 5 minutes par la Régie.
+  </p>
+</div>
+
+<script>
+(function(){
+"use strict";
+var SRC = "https://regieessencequebec.ca/stations.geojson.gz";
+var SOURCES = [
+  {label:"Régie (direct)", url:SRC},
+  {label:"via proxy", url:"https://corsproxy.io/?url="+encodeURIComponent(SRC)},
+  {label:"via proxy", url:"https://api.allorigins.win/raw?url="+encodeURIComponent(SRC)},
+  {label:"via proxy", url:"https://api.codetabs.com/v1/proxy?quest="+encodeURIComponent(SRC)}
+];
+var CACHE_KEY="eq_cache_v1", POS_KEY="eq_pos_v1", TTL=5*60*1000, PAGE=25;
+
+var $=function(id){return document.getElementById(id)};
+var state={stations:[],generated:null,loadedAt:0,sourceLabel:"",pos:null,posLabel:"",fuel:"regulier",shown:PAGE};
+
+function norm(s){return String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().trim()}
+function fmt(p){return p.toFixed(1).replace(".",",")}
+function fmtKm(k){return k<1?Math.round(k*1000)+" m":k.toFixed(1).replace(".",",")+" km"}
+function store(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function load(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}}
+
+/* ---------- Données ---------- */
+async function decode(buf){
+  var u8=new Uint8Array(buf), text;
+  if(u8[0]===0x1f && u8[1]===0x8b){
+    if(typeof DecompressionStream==="undefined") throw new Error("Décompression non supportée");
+    var s=new Blob([buf]).stream().pipeThrough(new DecompressionStream("gzip"));
+    text=await new Response(s).text();
+  } else {
+    text=new TextDecoder("utf-8").decode(u8);
+  }
+  return JSON.parse(text);
+}
+function parse(geo){
+  var feats=(geo&&geo.features)||[];
+  var out=[];
+  for(var i=0;i<feats.length;i++){
+    var f=feats[i], p=f.properties||{}, c=f.geometry&&f.geometry.coordinates;
+    if(!c||c.length<2) continue;
+    var lon=+c[0], lat=+c[1];
+    if(!isFinite(lat)||!isFinite(lon)||(lat===0&&lon===0)) continue;
+    if(p.Status && !/op.ration/i.test(p.Status)) continue;
+    var prices={};
+    (p.Prices||[]).forEach(function(x){
+      if(x.IsAvailable===false) return;
+      var v=parseFloat(String(x.Price).replace(",","."));
+      if(isFinite(v)&&v>0) prices[norm(x.GasType)]=v;
+    });
+    if(!Object.keys(prices).length) continue;
+    var brand=(p.brand&&norm(p.brand)!=="aucun")?p.brand:"";
+    out.push({n:brand||p.Name||"Station",b:brand,a:p.Address||"",pc:p.PostalCode||"",r:p.Region||"",lat:lat,lon:lon,p:prices});
+  }
+  return {stations:out, generated:(geo&&geo.generated_at)||null};
+}
+function apply(parsed,label){
+  state.stations=parsed.stations;
+  state.generated=parsed.generated;
+  state.loadedAt=Date.now();
+  state.sourceLabel=label;
+  store(CACHE_KEY,{t:state.loadedAt,g:parsed.generated,s:parsed.stations,l:label});
+}
+async function fetchWithTimeout(url,ms){
+  var ctl=new AbortController(), t=setTimeout(function(){ctl.abort()},ms);
+  try{
+    var r=await fetch(url,{signal:ctl.signal,cache:"no-store"});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    return await r.arrayBuffer();
+  } finally{clearTimeout(t)}
+}
+async function loadData(force){
+  var cached=load(CACHE_KEY);
+  if(cached && cached.s && cached.s.length){
+    state.stations=cached.s; state.generated=cached.g; state.loadedAt=cached.t; state.sourceLabel=cached.l+" (cache)";
+    if(!force && Date.now()-cached.t<TTL){ setStatus(null); render(); return; }
+    render();
+  }
+  if(!cached) setStatus("loading","Chargement des prix…");
+  for(var i=0;i<SOURCES.length;i++){
+    try{
+      var buf=await fetchWithTimeout(SOURCES[i].url,25000);
+      var parsed=parse(await decode(buf));
+      if(!parsed.stations.length) throw new Error("Fichier vide");
+      apply(parsed,SOURCES[i].label);
+      $("manual").classList.add("hidden");
+      setStatus(null); render(); return;
+    }catch(e){ /* essayer la source suivante */ }
+  }
+  if(state.stations.length){ setStatus("warn","Impossible d’actualiser : affichage des derniers prix en mémoire."); render(); }
+  else { setStatus("warn","Impossible de charger les prix."); $("manual").classList.remove("hidden"); }
+}
+$("file").addEventListener("change",async function(e){
+  var f=e.target.files&&e.target.files[0]; if(!f) return;
+  try{
+    var parsed=parse(await decode(await f.arrayBuffer()));
+    if(!parsed.stations.length) throw new Error("vide");
+    apply(parsed,"fichier local");
+    $("manual").classList.add("hidden"); setStatus(null); render();
+  }catch(err){ setStatus("warn","Fichier illisible. Utilise stations.geojson.gz de la Régie."); }
+});
+
+/* ---------- Position ---------- */
+function setPos(lat,lon,label){
+  state.pos={lat:lat,lon:lon}; state.posLabel=label||"";
+  store(POS_KEY,{lat:lat,lon:lon,label:label||""});
+  $("where").textContent="📍 "+(label||("Lat "+lat.toFixed(3)+", Lon "+lon.toFixed(3)));
+  state.shown=PAGE; render();
+}
+function locate(){
+  var btn=$("locBtn");
+  if(!navigator.geolocation){ $("where").textContent="Géolocalisation indisponible : entre une ville ou un code postal."; return; }
+  btn.disabled=true; $("where").textContent="Recherche de ta position…";
+  navigator.geolocation.getCurrentPosition(function(p){
+    btn.disabled=false; setPos(p.coords.latitude,p.coords.longitude,"Ma position");
+  },function(err){
+    btn.disabled=false;
+    $("where").textContent=(err&&err.code===1)
+      ?"Accès à la position refusé : entre une ville ou un code postal."
+      :"Position introuvable : entre une ville ou un code postal.";
+  },{enableHighAccuracy:false,timeout:12000,maximumAge:120000});
+}
+async function geocode(q){
+  var u="https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=ca&accept-language=fr&q="+encodeURIComponent(q);
+  var r=await fetch(u); if(!r.ok) throw new Error("HTTP "+r.status);
+  var j=await r.json(); if(!j.length) return null;
+  var parts=(j[0].display_name||q).split(",").map(function(s){return s.trim()});
+  return {lat:+j[0].lat,lon:+j[0].lon,label:parts.slice(0,2).join(", ")};
+}
+$("searchForm").addEventListener("submit",async function(e){
+  e.preventDefault();
+  var q=$("q").value.trim(); if(!q) return;
+  $("where").textContent="Recherche de « "+q+" »…";
+  try{
+    var g=await geocode(q);
+    if(g) setPos(g.lat,g.lon,g.label); else $("where").textContent="Aucun résultat pour « "+q+" ».";
+  }catch(err){ $("where").textContent="Recherche impossible pour le moment. Essaie « Me localiser »."; }
+});
+$("locBtn").addEventListener("click",locate);
+
+/* ---------- Affichage ---------- */
+function dist(a,b,c,d){
+  var R=6371, t=Math.PI/180, dLat=(c-a)*t, dLon=(d-b)*t;
+  var x=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(a*t)*Math.cos(c*t)*Math.sin(dLon/2)*Math.sin(dLon/2);
+  return 2*R*Math.asin(Math.sqrt(x));
+}
+function setStatus(kind,text){
+  var el=$("status");
+  if(!kind){ el.classList.add("hidden"); return; }
+  el.classList.remove("hidden");
+  el.className="msg"+(kind==="loading"?" info":"");
+  el.innerHTML=(kind==="loading"?'<span class="spin"></span>':"")+text.replace(/</g,"&lt;");
+}
+function el(tag,cls,text){var e=document.createElement(tag); if(cls)e.className=cls; if(text!=null)e.textContent=text; return e}
+
+function render(){
+  var list=$("list"), stats=$("stats"), more=$("more");
+  list.textContent=""; more.classList.add("hidden"); stats.classList.add("hidden");
+  updateFoot();
+  if(!state.stations.length) return;
+  if(!state.pos){ setStatus("loading-none","Clique sur « Me localiser » ou entre une ville pour voir les stations proches."); $("status").className="msg info"; return; }
+  setStatus(null);
+  var radius=+$("radius").value, sort=$("sort").value, fuel=state.fuel, pos=state.pos;
+  var res=[];
+  for(var i=0;i<state.stations.length;i++){
+    var s=state.stations[i], price=s.p[fuel]; if(price==null) continue;
+    var d=dist(pos.lat,pos.lon,s.lat,s.lon);
+    if(d<=radius) res.push({s:s,price:price,d:d});
+  }
+  if(!res.length){
+    setStatus("warn","Aucune station avec ce carburant dans "+radius+" km. Augmente le rayon."); return;
+  }
+  var min=Infinity,sum=0;
+  res.forEach(function(r){ if(r.price<min)min=r.price; sum+=r.price; });
+  var avg=sum/res.length;
+  res.sort(sort==="dist"?function(a,b){return a.d-b.d||a.price-b.price}:function(a,b){return a.price-b.price||a.d-b.d});
+
+  stats.textContent="";
+  [[fmt(min)+" ¢","Le plus bas"],[fmt(avg)+" ¢","Moyenne"],[String(res.length),"Stations"]].forEach(function(x){
+    var d=el("div","stat"); d.appendChild(el("b",null,x[0])); d.appendChild(el("span",null,x[1])); stats.appendChild(d);
+  });
+  stats.classList.remove("hidden");
+
+  var frag=document.createDocumentFragment();
+  res.slice(0,state.shown).forEach(function(r,i){
+    var isBest=r.price===min;
+    var li=el("li","item"+(isBest?" best":""));
+    li.appendChild(el("div","rank",String(i+1)));
+    var mid=el("div"); mid.appendChild(el("div","name",r.s.n)); mid.appendChild(el("div","addr",r.s.a)); li.appendChild(mid);
+    var pr=el("div","price",fmt(r.price)); pr.appendChild(el("small",null,"¢ / litre")); li.appendChild(pr);
+    var meta=el("div","meta");
+    meta.appendChild(el("span",null,fmtKm(r.d)));
+    if(isBest) meta.appendChild(el("span","badge","Le moins cher"));
+    else meta.appendChild(el("span","delta","+"+fmt(r.price-min)+" ¢"));
+    var a=el("a","go","Itinéraire ›");
+    a.href="https://www.google.com/maps/dir/?api=1&destination="+r.s.lat+","+r.s.lon;
+    a.target="_blank"; a.rel="noopener";
+    meta.appendChild(a); li.appendChild(meta);
+    frag.appendChild(li);
+  });
+  list.appendChild(frag);
+  if(res.length>state.shown){ more.classList.remove("hidden"); more.textContent="Voir plus ("+(res.length-state.shown)+")"; }
+}
+function updateFoot(){
+  var g="";
+  if(state.generated){
+    var d=new Date(state.generated);
+    g=isNaN(d)?String(state.generated):d.toLocaleString("fr-CA",{dateStyle:"medium",timeStyle:"short",timeZone:"America/Toronto"});
+  } else if(state.loadedAt){ g=new Date(state.loadedAt).toLocaleString("fr-CA",{dateStyle:"medium",timeStyle:"short"}); }
+  var f=$("foot");
+  f.textContent="Les prix sont déclarés par les stations et peuvent différer de ceux à la pompe. "+
+    (g?"Données du "+g+" · ":"")+(state.stations.length?state.stations.length+" stations · ":"")+
+    (state.sourceLabel?state.sourceLabel+" · ":"")+"Source : ";
+  var a=el("a",null,"Régie essence Québec"); a.href="https://regieessencequebec.ca/"; a.target="_blank"; a.rel="noopener";
+  f.appendChild(a);
+}
+
+/* ---------- Événements ---------- */
+$("fuelSeg").addEventListener("click",function(e){
+  var b=e.target.closest("button[data-fuel]"); if(!b) return;
+  state.fuel=b.getAttribute("data-fuel");
+  Array.prototype.forEach.call($("fuelSeg").children,function(x){x.setAttribute("aria-pressed",x===b?"true":"false")});
+  state.shown=PAGE; render();
+});
+["radius","sort"].forEach(function(id){$(id).addEventListener("change",function(){state.shown=PAGE;render()})});
+$("more").addEventListener("click",function(){state.shown+=PAGE;render()});
+
+/* ---------- Démarrage ---------- */
+var last=load(POS_KEY);
+if(last&&isFinite(last.lat)) setPos(last.lat,last.lon,last.label);
+loadData(false);
+locate();
+setInterval(function(){ if(!document.hidden) loadData(true); },TTL);
+document.addEventListener("visibilitychange",function(){ if(!document.hidden && Date.now()-state.loadedAt>TTL) loadData(true); });
+})();
+</script>
+</body>
+</html>
